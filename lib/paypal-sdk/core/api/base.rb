@@ -79,7 +79,11 @@ module PayPal::SDK::Core
         payload[:header] = default_http_header.merge(payload[:header])
         payload[:uri]   ||= uri.dup
         payload[:http]  ||= http.dup
-        payload[:uri].query = encode_www_form(payload[:query]) if payload[:query] and payload[:query].any?
+        if payload[:query] and payload[:query].any?
+          start_and_end_times = payload[:query].select{|key,value| [:start_time, :end_time].include?(key)}
+          payload[:uri].query = encode_www_form(payload[:query])
+          payload[:uri].query.merge(start_and_end_times)
+        end
         format_request(payload)
         payload[:response] = http_call(payload)
         format_response(payload)
