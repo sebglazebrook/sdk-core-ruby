@@ -80,9 +80,10 @@ module PayPal::SDK::Core
         payload[:uri]   ||= uri.dup
         payload[:http]  ||= http.dup
         if payload[:query] and payload[:query].any?
-          start_and_end_times = payload[:query].select{|key,value| [:start_time, :end_time].include?(key)}
-          payload[:uri].query = encode_www_form(payload[:query])
-          payload[:uri].query.merge(start_and_end_times)
+          do_not_encode = [:start_time, :end_time]
+          start_and_end_times = payload[:query].select{|key,value| do_not_encode.include?(key)}
+          payload[:uri].query = encode_www_form(payload[:query].delete_if{|key| do_not_encode.include?(key)})
+          payload[:uri].query += ('&' + start_and_end_times.map{|key,value| "#{key.to_s}=#{value}" }.join('&'))
         end
         format_request(payload)
         payload[:response] = http_call(payload)
